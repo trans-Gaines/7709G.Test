@@ -1,0 +1,150 @@
+---
+title: "Lab 2"
+author: "trans-Gaines"
+date: "9/19/2021"
+output: html_document
+---
+**Process of set up**
+
+Loading in data from world happiness report:
+```{r}
+WHR2018 <- read.table("open_data/WHR2018.csv", 
+                             sep = ",",
+                             header = TRUE )
+```
+**1. Use R to demonstrate that the mean minimizes the sum of the squared deviations from the mean. Accomplish the following steps:**
+
+a. Produce a sample of at least 10 or more different numbers
+```{r}
+samplevector <- 1:13
+```
+*Self Assessment: 100*
+
+b. Produce a simulation following the example from the concepts section
+```{r}
+min(samplevector) 
+max(samplevector)
+numbers_to_test <- min(samplevector):max(samplevector)
+sum_deviations <-c()
+for(i in numbers_to_test) {sum_deviations[i] <- sum(samplevector-i)}
+sum_deviations
+```
+Here we find that the 7th number is 0, thus the 7th number minimizes the deviation, also known as the mean. 
+*Self Assessment: 95*
+
+**c.Use your simulation to test a range of numbers smaller and larger than the mean to show that the mean minimizes the sum of the squared deviations from the mean.**
+```{r}
+mean(samplevector)
+sum_sq_deviations <-c()
+for(i in samplevector) {sum_sq_deviations[i] <- sum(samplevector-i)^2}
+
+sum_sq_deviations
+```
+*self Assessment: 40*
+
+**d. Plot your results.**
+```{r}
+plot(sum_sq_deviations)
+```
+*Self Assessment: 95*
+
+
+**2.Write a custom R function for any one of the following descriptive statistics: median, mode, standard deviation, variance.**
+Variance is defined as the sum of the deviations from the mean, divided by the number of observations minus 1. We utilize this to write a custom function
+```{r}
+customvar <- function(samplevector){
+  (sum((mean(samplevector)-samplevector)^2))/(length(samplevector)-1)
+}
+
+customvar(samplevector)
+```
+*Self Assessment 80*
+
+**2a.Demonstrate that it produces the same value as the base R function given some set of numbers.**
+```{r}
+var(samplevector)
+customvar(samplevector)
+```
+
+*Self Assessment: 100*
+
+**3.Imagine the same instructor taught a morning, afternoon, and evening section of the same course. And, the average scores for each section on a midterm were 85% for the morning, 90% for the afternoon, and 93% for the evening sections. Create a data.frame representing these means for each section. Then, use ggplot2 to plot the means as bar graph. (hint you will need one vector for the class sections, and one vector for the means. Then you can combine them into a data.frame before plotting them)**
+We create our vectors. 
+```{r}
+classsections <-c("morning", "afternoon", "evening")
+classmeans <-c(.85,.9,.93)
+```
+Then we combine into a data.frame
+```{r}
+professorSections.data <- data.frame(classsections, classmeans)
+```
+We make sure our ggplot2 is loaded up and ready to go.
+```{r}
+library(ggplot2)
+```
+And we use ggplot2 to generate our desired graphic.
+```{r}
+ggplot(professorSections.data, aes(x = classsections, y = classmeans))+
+         geom_bar(stat="identity")
+```
+*Self Assessment: 80*
+
+**4. Imagine there were two instructors, and they each taught different sections in the morning, afternoon and evening. The midterm averages for instructor 1 were 75%, 78%, and 80% in the morning, afternoon, and evening. The midterm averages for instructor 2 were 88%, 76%, and 63% for the morning, afternoon, and evening. Create a data.frame representing the means, the time of day, and the instructors (three columns). Then plot data.frame using ggplot2 as a bar graph.**
+We create our vectors. 
+```{r}
+classsections <-c("morning", "afternoon", "evening","morning", "afternoon", "evening")
+classmeans2 <-c(.75,.78,.80,.88,.76,.63)
+instructors <-c("instructor1", "instructor1", "instructor1", "instructor2", "instructor2","instructor2")
+```
+Then we combine into a data.frame
+```{r}
+professorSections2.data <- data.frame(classsections, classmeans2,instructors)
+```
+And we use ggplot2 to generate our desired graphic.
+```{r}
+ggplot(professorSections2.data, aes(x = classsections, y = classmeans2, group = instructors, fill = instructors))+
+         geom_bar(stat="identity", position = "dodge")
+```
+*Self Assessment: 50*
+
+**5.Import the WHR2018.csv data file, containing measure from the World Happiness report from 2018. For the years 2010 to 2015, what was the mean “healthy life expectancy at birth” for each year (find the mean for each year across countries). Show your results in a table and in a graph using ggplot.**
+Load in data
+```{r}
+WHR <- read.table("open_data/WHR2018.csv", 
+                             sep = ",",
+                             header = TRUE )
+```
+Now we group and filter by years using dplyer, and calculate means.
+```{r}
+library(dplyr)
+mean_hle <- WHR  %>%
+  filter(year >=2010, year<= 2015) %>%
+    group_by(year)%>%
+  summarize(mean_healthy = mean(Healthy.life.expectancy.at.birth, na.rm = TRUE))
+
+knitr::kable(mean_hle)
+```
+Then we show in a plot
+```{r}
+plot(mean_hle)
+```
+*Self Assessment: 40*
+
+**6. Repeat the above, except in addition to calculating the mean for each year, also calculate the standard deviation for “healthy life expectancy at birth” for each year. Then, add error bars to your graph using the +1 and -1 standard deviations from the means for each year.**
+We add a gg plot with error bars and standard deviation. 
+```{r}
+library(dplyr)
+mean_hle <- WHR  %>%
+  filter(year >=2010, year<= 2015) %>%
+    group_by(year)%>%
+  summarize(mean_healthy = mean(Healthy.life.expectancy.at.birth, na.rm = TRUE),
+            sd_health = sd(Healthy.life.expectancy.at.birth, na.rm = TRUE))
+  
+
+knitr::kable(mean_hle)
+
+ggplot(mean_hle, aes( x = year, y = mean_healthy))+
+  geom_bar(stat="identity") +
+  geom_errorbar(aes(ymin = mean_healthy - sd_health, ymax = mean_healthy + sd_health), width = .25)
+```
+*Self Assessment: 60*
